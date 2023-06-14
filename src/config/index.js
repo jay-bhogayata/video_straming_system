@@ -6,6 +6,10 @@ const config = {
   MONGODB_URI: process.env.MONGODB_URI || "mongodb://127.0.0.1/stream_db",
   JWT_SECRET: process.env.JWT_SECRET || "change_this_please",
   JWT_EXPIRY: process.env.JWT_EXPIRY || "7d",
+  AWS_SES_USER_ACCESS_KEY: process.env.AWS_SES_USER_ACCESS_KEY,
+  AWS_SES_USER_SECRET_ACCESS_KEY: process.env.AWS_SES_USER_SECRET_ACCESS_KEY,
+  AWS_SES_REGION: process.env.AWS_SES_REGION,
+  SENDER_EMAIL: process.env.SENDER_EMAIL,
 };
 
 export default config;
