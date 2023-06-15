@@ -46,3 +46,24 @@ export const sendSignUpOtp = asyncHandler(async (req, res) => {
     );
   }
 });
+
+export const signup = asyncHandler(async (req, res) => {
+  const { email, otp } = req.body;
+  const otpByUser = createHash("sha256").update(otp).digest("hex");
+
+  const user = await User.findOne({ email });
+
+  if (user.otp === otpByUser && Date.now() < user.otpExpiry) {
+    user.verified = true;
+    user.otp = undefined;
+    user.otpExpiry = undefined;
+    await user.save();
+    res.status(200).json({
+      success: true,
+      message: `user is verified with email ${user.email}`,
+    });
+  } else {
+    throw new CustomError("either otp is wrong or otp time expires.", 400);
+    await user.deleteOne();
+  }
+});
