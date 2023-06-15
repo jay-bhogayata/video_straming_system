@@ -6,7 +6,7 @@ import AuthRoles from "../utils/AuthRoles.js";
 import config from "../config/index.js";
 import { createHash, randomBytes } from "node:crypto";
 
-const userSchema = new Schema(
+const userSchema = new mongoose.Schema(
   {
     name: {
       type: String,
@@ -23,12 +23,11 @@ const userSchema = new Schema(
       type: String,
       required: [true, "password is required"],
       minLength: [8, "password must be at least 8 characters long."],
-      maxLength: [24, "password length can not be more then 24 characters."],
     },
     role: {
       type: String,
       enum: Object.values(AuthRoles),
-      default: "user",
+      default: "USER",
     },
     subscribed: {
       type: Boolean,
@@ -37,7 +36,6 @@ const userSchema = new Schema(
     subscriptionType: {
       type: String,
       enum: Object.values(SubscriptionType),
-      default: AuthRoles.USER,
     },
     verified: {
       type: Boolean,
@@ -55,7 +53,7 @@ const userSchema = new Schema(
 
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
-  this.password = bcrypt.hash(this.password, 10);
+  this.password = await bcrypt.hash(this.password, 10);
   return next();
 });
 
@@ -83,7 +81,7 @@ userSchema.methods = {
   },
 
   generateOtp: function () {
-    const otp = randomBytes(6).toString("hex");
+    const otp = randomBytes(3).toString("hex");
 
     this.otp = createHash("sha256").update(otp).digest("hex");
 
