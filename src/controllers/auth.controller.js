@@ -90,6 +90,7 @@ export const login = asyncHandler(async (req, res) => {
     res.cookie("token", token, cookieOptions);
     return res.status(200).json({
       success: true,
+      message: "login success",
       token,
       user,
     });
