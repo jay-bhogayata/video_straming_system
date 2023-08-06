@@ -21,7 +21,7 @@ app.use("/api/v1", router);
 app.get("/health", (req, res) => {
   res.status(200);
   res.json({
-    message: "backend is working fine.",
+    message: "backend is working fine...",
   });
 });
 
