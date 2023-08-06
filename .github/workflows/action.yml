@@ -33,4 +33,4 @@ jobs:
         run: |
           echo "${{secrets.DIGITALOCEAN_PRIVATE_KEY}}" > deploy_key
           chmod 600 deploy_key
-          ssh -o "StrictHostKeyChecking=no" -i deploy_key root@64.227.186.1 "cd $DIGITALOCEAN_PATH && docker-compose pull && docker-compose down && docker-compose up -d"
+          ssh -o "StrictHostKeyChecking=no" -i deploy_key root@64.227.186.1 "cd $DIGITALOCEAN_PATH && sdocker-compose pull && docker-compose down && docker-compose up --env-file .env -d"
