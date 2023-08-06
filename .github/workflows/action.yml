@@ -22,8 +22,7 @@ jobs:
           CONTAINER_REGISTRY: ghcr.io
         run: |
           echo "${{ secrets.GHCR_PAT }}" | docker login $CONTAINER_REGISTRY -u $GITHUB_ACTOR --password-stdin
-          docker buildx create --use
-          docker buildx build --platform linux/amd64 --tag ghcr.io/jay-bhogayata/api-stream-max:latest .
+          docker build -t ghcr.io/jay-bhogayata/api-stream-max:latest .
           docker images
           docker push ghcr.io/jay-bhogayata/api-stream-max:latest
 
