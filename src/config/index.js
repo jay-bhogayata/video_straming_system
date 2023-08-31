@@ -10,6 +10,9 @@ const config = {
   AWS_SES_USER_SECRET_ACCESS_KEY: process.env.AWS_SES_USER_SECRET_ACCESS_KEY,
   AWS_SES_REGION: process.env.AWS_SES_REGION,
   SENDER_EMAIL: process.env.SENDER_EMAIL,
+  AWS_REGION: process.env.AWS_REGION,
+  AWS_ACCESS_KEY: process.env.AWS_SES_USER_ACCESS_KEY,
+  AWS_SECRET_ACCESS_KEY: process.env.AWS_SES_USER_SECRET_ACCESS_KEY,
 };
 
 export default config;
