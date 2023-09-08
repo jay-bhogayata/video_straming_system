@@ -6,7 +6,6 @@ import router from "./routes/index.js";
 import bodyParser from "body-parser";
 import fileUpload from "express-fileupload";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-import { ECSClient, RunTaskCommand } from "@aws-sdk/client-ecs";
 import config from "./config/index.js";
 import fs from "node:fs";
 import { execSync } from "node:child_process";
@@ -28,20 +27,13 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use("/api/v1", router);
 
-const ecsClient = new ECSClient({
-  region: config.AWS_REGION,
-  credentials: {
-    accessKeyId: config.AWS_ACCESS_KEY,
-    secretAccessKey: config.AWS_SECRET_ACCESS_KEY,
-  },
-});
-
 app.get("/health", (req, res) => {
   res.status(200);
   res.json({
     message: "backend is working fine...",
   });
 });
+
 const s3Client = new S3Client({
   region: config.AWS_REGION,
   credentials: {

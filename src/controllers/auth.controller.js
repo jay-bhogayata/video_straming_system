@@ -89,6 +89,7 @@ export const login = asyncHandler(async (req, res) => {
     const token = user.getJWTToken();
     user.password = undefined;
     res.cookie("token", token, cookieOptions);
+    res.cookie("user", user, cookieOptions);
     return res.status(200).json({
       success: true,
       message: "login success",
@@ -194,13 +195,3 @@ export const resetPassword = asyncHandler(async (req, res) => {
     user,
   });
 });
-
-// lambda function check you are admin or not
-// s3 presigned url
-// temp bucket
-// upload video to temp bucket
-// on temp bucket eventbridge set up
-// trigger lambda with meta data of upload video
-// lambda push video into queue(redis)
-// consumer ecs
-// ecs push bucket into final s3 bucket
