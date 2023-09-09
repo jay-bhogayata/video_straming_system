@@ -65,6 +65,68 @@ export const addMovie = asyncHandler(async (req, res) => {
   });
 });
 
+export const updateMovieById = asyncHandler(async (req, res) => {
+  const { id: MovieId } = req.params;
+
+  let {
+    name,
+    displayName,
+    year,
+    imdbRating,
+    movieTime,
+    shortIntro,
+    director,
+    writers,
+    cast,
+    genre,
+  } = req.body;
+  // cast = cast.split(",").map((cast) => cast.trim());
+  // writers = writers.split(",").map((writers) => writers.trim());
+  // genre = genre.split(",").map((genre) => genre.trim());
+  if (cast && typeof cast === "string") {
+    cast = cast.split(",").map((item) => item.trim());
+  }
+  if (writers && typeof writers === "string") {
+    writers = writers.split(",").map((item) => item.trim());
+  }
+  if (genre && typeof genre === "string") {
+    genre = genre.split(",").map((item) => item.trim());
+  }
+  if (
+    !name ||
+    !displayName ||
+    !year ||
+    !imdbRating ||
+    !movieTime ||
+    !shortIntro ||
+    !director ||
+    !writers ||
+    !cast ||
+    !genre
+  ) {
+    throw new CustomError("all filed is required.", 500);
+  }
+
+  const movie = await Movie.findByIdAndUpdate(MovieId, {
+    name,
+    displayName,
+    year,
+    imdbRating,
+    movieTime,
+    shortIntro,
+    director,
+    writers,
+    cast,
+    genre,
+  });
+  const newObj = await Movie.findById(MovieId);
+  res.status(200).json({
+    success: true,
+    message: "Hello",
+    newObj,
+  });
+});
+
 export const getMovie = asyncHandler(async (req, res) => {
   const movie = await Movie.find({});
   if (!movie) {
@@ -144,6 +206,13 @@ export const uploadVideo = asyncHandler(async (req, res) => {
     res.status(500).json({ error: "Upload failed" });
   }
 
+  const obj = await Movie.findOne({ name: title });
+  const finalObjAndUpdate = await Movie.findByIdAndUpdate(obj._id, {
+    processingState: processing,
+  });
+  obj = await Movie.findOne({ name: title });
+  console.log(obj);
+
   try {
     const response = await fetch(
       "http://localhost:3001/api/v1/movie/transcode",
@@ -162,7 +231,10 @@ export const uploadVideo = asyncHandler(async (req, res) => {
 
     if (response.ok) {
       const transcodingResponse = await response.json();
-      console.log("Transcoding started res:", transcodingResponse);
+      finalObjAndUpdate = await Movie.findByIdAndUpdate(obj._id, {
+        processingState: processed,
+      });
+      console.log("Transcoding done:", transcodingResponse);
     } else {
       console.error("Transcoding API failed");
     }
@@ -289,6 +361,52 @@ export const transcode = asyncHandler(async (req, res) => {
 
     console.log(`${dir} is deleted!`);
   });
+});
+
+export const thumbImgUpload = asyncHandler(async (req, res) => {
+  if (!req.files || !req.files.image) {
+    return res.status(400).json({ error: "No video uploaded" });
+  }
+  const uploadedImage = req.files.image;
+  console.log(req.body.title, uploadedImage);
+  const title = req.body.title;
+  const date = Date.now();
+  const bucketName = "stream-max-prod";
+  const imgKey = `images/${title}${date}.jpg`;
+  console.log(imgKey);
+  console.log(uploadedImage.data);
+  const params = {
+    Bucket: bucketName,
+    Key: imgKey,
+    Body: uploadedImage.data,
+  };
+
+  const imgUrl = `https://${bucketName}.s3.amazonaws.com/${imgKey}`;
+
+  try {
+    const command = new PutObjectCommand(params);
+    const uploadResponse = await s3Client.send(command);
+
+    console.log(uploadResponse);
+    const imgUrl = `https://${bucketName}.s3.amazonaws.com/${imgKey}`;
+    console.log(imgUrl);
+
+    const obj = await Movie.findOne({ name: title });
+    const finalObjAndUpdate = await Movie.findByIdAndUpdate(obj._id, {
+      thumbnailImg: imgUrl,
+    });
+    const finalObj = await Movie.findOne({ name: title });
+    console.log(obj);
+    res.status(200).json({
+      success: true,
+      message: "Upload successful",
+      videoUrl: imgUrl,
+      finalObj,
+    });
+  } catch (error) {
+    console.error("Error uploading video:", error);
+    res.status(500).json({ error: "Upload failed" });
+  }
 });
 
 export const test = asyncHandler(async (req, res) => {
