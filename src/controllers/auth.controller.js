@@ -195,3 +195,12 @@ export const resetPassword = asyncHandler(async (req, res) => {
     user,
   });
 });
+
+export const listAllUser = asyncHandler(async (req, res) => {
+  const users = await User.find({});
+
+  res.status(200).json({
+    success: true,
+    users,
+  });
+});

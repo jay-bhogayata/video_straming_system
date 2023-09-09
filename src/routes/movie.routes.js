@@ -10,16 +10,17 @@ import {
   thumbImgUpload,
   updateMovieById,
 } from "../controllers/video.controller.js";
+import { authorize, isLoggedIn } from "../middleware/auth.middlerware.js";
 
 const router = new Router();
 
-router.post("/addMovie", addMovie);
-router.put("/updateMovieById/:id", updateMovieById);
+router.post("/addMovie", isLoggedIn, authorize, addMovie);
+router.put("/updateMovieById/:id", isLoggedIn, authorize, updateMovieById);
 router.get("/getAllMovie", getMovie);
-router.post("/upload", uploadVideo);
-router.post("/transcode", transcode);
+router.post("/upload", isLoggedIn, authorize, uploadVideo);
+router.post("/transcode", isLoggedIn, authorize, transcode);
 router.get("/getMovieById/:id", getMovieById);
-router.delete("/deleteMovieById/:id", deleteMovieById);
-router.post("/thumbImgUpload", thumbImgUpload);
+router.delete("/deleteMovieById/:id", isLoggedIn, authorize, deleteMovieById);
+router.post("/thumbImgUpload", isLoggedIn, authorize, thumbImgUpload);
 
 export default router;
