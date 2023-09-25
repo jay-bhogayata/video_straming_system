@@ -13,6 +13,8 @@ const config = {
   AWS_REGION: process.env.AWS_REGION,
   AWS_ACCESS_KEY: process.env.AWS_SES_USER_ACCESS_KEY,
   AWS_SECRET_ACCESS_KEY: process.env.AWS_SES_USER_SECRET_ACCESS_KEY,
+  STRIPE_kEY: process.env.STRIPE_KEY,
+  STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
 };
 
 export default config;

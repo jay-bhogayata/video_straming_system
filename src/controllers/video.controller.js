@@ -6,6 +6,7 @@ import { execSync } from "node:child_process";
 import path from "node:path";
 import CustomError from "../utils/CustomError.js";
 import Movie from "../models/movie.schema.js";
+import User from "../models/user.schema.js";
 
 const s3Client = new S3Client({
   region: config.AWS_REGION,
@@ -128,7 +129,8 @@ export const updateMovieById = asyncHandler(async (req, res) => {
 });
 
 export const getMovie = asyncHandler(async (req, res) => {
-  const movie = await Movie.find({});
+  const movie = await Movie.find({ processingState: "processed" });
+  console.log(movie);
   if (!movie) {
     throw new CustomError("no movie found", 500);
   }
@@ -138,7 +140,57 @@ export const getMovie = asyncHandler(async (req, res) => {
   });
 });
 
+export const addRating = asyncHandler(async (req, res) => {
+  const { rating, email, movieId } = req.body;
+
+  const user = await User.findOne({ email: email });
+  const movie = await Movie.findById(movieId);
+
+  if (movie.userRatingList.includes(user.id)) {
+    res.status(200).json({
+      success: false,
+      message:
+        "you already rated this movie you can not rate movie more then one time",
+    });
+  } else {
+    movie.userRatingList.push(user.id);
+    movie.userRating.push(rating);
+    await movie.save();
+    const updatedMovie = await Movie.findById(movieId);
+
+    res.status(200).json({
+      success: true,
+      message: "you rated movie successfully",
+      updatedMovie,
+    });
+  }
+});
+
+export const getMovieAdmin = asyncHandler(async (req, res) => {
+  const movie = await Movie.find({});
+  if (!movie) {
+    throw new CustomError("no movie found", 500);
+  }
+  res.status(200).json({
+    success: true,
+    movie,
+  });
+});
 export const getMovieById = asyncHandler(async (req, res) => {
+  const { id: MovieId } = req.params;
+
+  const movie = await Movie.findById(MovieId);
+
+  if (!movie) {
+    throw new CustomError("no movie found", 404);
+  }
+  res.status(200).json({
+    success: true,
+    movie,
+  });
+});
+
+export const userGetMovieById = asyncHandler(async (req, res) => {
   const { id: MovieId } = req.params;
 
   const movie = await Movie.findById(MovieId);
@@ -193,29 +245,27 @@ export const uploadVideo = asyncHandler(async (req, res) => {
     const command = new PutObjectCommand(params);
     const uploadResponse = await s3Client.send(command);
 
-    console.log(uploadResponse);
-    const videoUrl = `https://${bucketName}.s3.amazonaws.com/${videoKey}`;
+    const videoUrlSend = `https://${bucketName}.s3.amazonaws.com/${videoKey}`;
     console.log(videoUrl);
-    res.status(200).json({
+    res.json({
       success: true,
       message: "Upload successful",
-      videoUrl: videoUrl,
+      videoUrl: videoUrlSend,
     });
   } catch (error) {
-    console.error("Error uploading video:", error);
-    res.status(500).json({ error: "Upload failed" });
+    throw new CustomError("error in uploading video", 500);
   }
 
   const obj = await Movie.findOne({ name: title });
-  const finalObjAndUpdate = await Movie.findByIdAndUpdate(obj._id, {
-    processingState: processing,
+  let finalObjAndUpdate = await Movie.findByIdAndUpdate(obj._id, {
+    processingState: "processing",
   });
-  obj = await Movie.findOne({ name: title });
-  console.log(obj);
+  let obj2 = await Movie.findOne({ name: title });
+  console.log(obj2);
 
   try {
     const response = await fetch(
-      "http://localhost:3001/api/v1/movie/transcode",
+      "http://localhost:3002/api/v1/movie/transcode",
       {
         method: "POST",
         headers: {
@@ -230,9 +280,10 @@ export const uploadVideo = asyncHandler(async (req, res) => {
     );
 
     if (response.ok) {
+      console.log(response);
       const transcodingResponse = await response.json();
       finalObjAndUpdate = await Movie.findByIdAndUpdate(obj._id, {
-        processingState: processed,
+        processingState: "processed",
       });
       console.log("Transcoding done:", transcodingResponse);
     } else {
@@ -268,7 +319,7 @@ export const transcode = asyncHandler(async (req, res) => {
       }
 
       const command = `ffmpeg -i ${videoUrl} -vf "scale=${resolution.width}:${resolution.height}" -c:v libx264 -b:v ${resolution.bitrate} -c:a aac -strict -2 -f hls -hls_time 10 -hls_list_size 0 -hls_segment_filename ${resolutionDirectory}/${resolution.name}_%03d.ts ${resolutionDirectory}/${resolution.name}.m3u8`;
-      //     // Run the transcoding command using a child_process library
+
       execSync(command);
       const uploadParams = {
         Bucket: "stream-max-prod",
@@ -407,8 +458,4 @@ export const thumbImgUpload = asyncHandler(async (req, res) => {
     console.error("Error uploading video:", error);
     res.status(500).json({ error: "Upload failed" });
   }
-});
-
-export const test = asyncHandler(async (req, res) => {
-  const title = "Iron_man";
 });

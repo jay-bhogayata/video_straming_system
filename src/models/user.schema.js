@@ -34,6 +34,9 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    stripeCustomerId: {
+      type: String,
+    },
     subscriptionType: {
       type: String,
       enum: Object.values(SubscriptionType),

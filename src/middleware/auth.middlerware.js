@@ -6,6 +6,7 @@ import config from "../config/index.js";
 
 export const isLoggedIn = asyncHandler(async (req, res, next) => {
   let token;
+
   if (
     req.cookies.token ||
     (req.headers.authorization &&
@@ -22,6 +23,14 @@ export const isLoggedIn = asyncHandler(async (req, res, next) => {
     next();
   } catch (error) {
     throw new CustomError("Not authorize to access this resource", 401);
+  }
+});
+
+export const isSubscriber = asyncHandler(async (req, res, next) => {
+  if (req.cookies?.user?.subscribed === true) {
+    next();
+  } else {
+    throw new CustomError("you are not authorize to access this content.");
   }
 });
 

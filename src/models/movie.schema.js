@@ -17,6 +17,12 @@ const movieSchema = new mongoose.Schema(
     imdbRating: {
       type: String,
     },
+    userRating: {
+      type: ["Number"],
+    },
+    userRatingList: {
+      type: ["string"],
+    },
     movieTime: {
       type: String,
     },
